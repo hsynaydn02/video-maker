@@ -1,0 +1,28 @@
+FROM node:18-alpine
+
+# FFmpeg ve gerekli sistem paketlerini yükle
+RUN apk add --no-cache \
+    ffmpeg \
+    python3 \
+    make \
+    g++ \
+    && ln -sf python3 /usr/bin/python
+
+WORKDIR /app
+
+# Package dosyalarını kopyala
+COPY package*.json ./
+
+# Dependencies yükle
+RUN npm install
+
+# Uygulama dosyalarını kopyala
+COPY . .
+
+# Port aç
+EXPOSE 3000
+
+# Geçici dosyalar için dizin oluştur
+RUN mkdir -p /app/temp /app/output
+
+CMD ["npm", "start"]
