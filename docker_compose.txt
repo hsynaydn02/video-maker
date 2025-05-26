@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  video-maker:
+    build: .
+    container_name: video-maker-api
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - PEXELS_API_KEY=${PEXELS_API_KEY}
+      - MAX_VIDEO_DURATION=60
+      - DEFAULT_VIDEO_DURATION=10
+      - VIDEO_RESOLUTION=1920x1080
+      - VIDEO_FPS=30
+      - CLEANUP_INTERVAL=30
+    volumes:
+      - ./output:/app/output
+      - ./logs:/app/logs
+      - temp_data:/app/temp
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+
+  # Nginx reverse proxy (opsiyonel)
+  nginx:
+    image: nginx:alpine
+    container_name: video-maker-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl  # SSL sertifikaları için
+      - ./output:/var/www/output
+    depends_on:
+      - video-maker
+    restart: unless-stopped
+
+  # Redis (cache için, opsiyonel)
+  redis:
+    image: redis:7-alpine
+    container_name: video-maker-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+volumes:
+  temp_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  default:
+    name: video-maker-network
