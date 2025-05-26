@@ -24,7 +24,7 @@ Bu proje, Pexels API kullanarak sahne promptlarından otomatik video oluşturan 
 
 ### 1. Projeyi klonlayın
 ```bash
-git clone <repository-url>
+git clone https://github.com/hsynaydn02/video-maker
 cd video-maker-api
 ```
 
